@@ -5476,7 +5476,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 		if (this.renderMode === "virtual") {
 
-			var otherHeight = Math.floor(this.columnManager.getElement().offsetHeight + (this.table.footerManager && !this.table.footerManager.external ? this.table.footerManager.getElement().offsetHeight : 0));
+			// J: Remove floor() here
+
+			var otherHeight = this.columnManager.getElement().offsetHeight + (this.table.footerManager && !this.table.footerManager.external ? this.table.footerManager.getElement().offsetHeight : 0);
 
 			if (this.fixedHeight) {
 
@@ -5489,7 +5491,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 				this.element.style.height = "";
 
-				this.element.style.height = Math.floor(this.table.element.clientHeight) - otherHeight + "px";
+				// J: +1 to correct for rounding errors. This fixes the gratuitous scroll issue.
+
+				this.element.style.height = this.table.element.clientHeight - otherHeight + 1 + "px";
 
 				this.element.scrollTop = this.scrollTop;
 			}
@@ -5500,7 +5504,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 			//check if the table has changed size when dealing with variable height tables
 
-			if (!this.fixedHeight && Math.floor(initialHeight) != Math.floor(this.element.clientHeight)) {
+			// J: Replaced != check with abs check here.
+
+			if (!this.fixedHeight && Math.abs(initialHeight - this.element.clientHeight) > 1) {
 
 				modExists = this.table.modExists("resizeTable");
 
