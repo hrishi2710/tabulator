@@ -688,7 +688,13 @@ Cell.prototype.setHeight = function(){
 };
 
 Cell.prototype.getHeight = function(){
-	return this.height || this.element.offsetHeight;
+	// J:-> Ugly hack. Couldn't figure out why offsetHeight is so low (8px)
+	// sometimes. 
+	if (this.height) 
+		return this.height;
+	let h = Math.max(this.element.offsetHeight, 25);
+	return h;
+	//return this.height || this.element.offsetHeight;
 };
 
 Cell.prototype.show = function(){
