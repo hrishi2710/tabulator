@@ -5470,6 +5470,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 	//adjust the height of the table holder to fit in the Tabulator element
 
 	RowManager.prototype.adjustTableSize = function () {
+		var mustRedraw = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+
 
 		var initialHeight = this.element.clientHeight,
 		    modExists;
@@ -5506,13 +5508,17 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 			// J: Replaced != check with abs check here.
 
-			if (!this.fixedHeight && Math.abs(initialHeight - this.element.clientHeight) > 1) {
+			//console.log("initialHeight, clientHeight :", initialHeight, this.element.clientHeight);
+
+			if (!this.fixedHeight && Math.abs(initialHeight - this.element.clientHeight) > 5) {
 
 				modExists = this.table.modExists("resizeTable");
 
 				if (modExists && !this.table.modules.resizeTable.autoResize || !modExists) {
 
-					this.redraw();
+					// J: Added this check to adjust tablesize dynamically without doing full redraw which loses scroll positions during editing. 
+
+					if (mustRedraw) this.redraw();
 				}
 			}
 		}
