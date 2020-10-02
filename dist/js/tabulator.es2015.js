@@ -6502,11 +6502,26 @@ Cell.prototype.setHeight = function () {
 	this.element.style.height = this.row.heightStyled;
 };
 
+Cell.prototype.setHeightSpecial = function (h) {
+	this.heightSpecial = h;
+};
 Cell.prototype.getHeight = function () {
+
+	if (this.height) return this.height;
+	// J:-> Ugly but effective hack. While editing, this will ensure 
+	// at least 150px size for code-mirror. 
+	var h = this.element.offsetHeight;
+	if (this.table.modExists("edit", true)) {
+		var editing = this.table.modules.edit.getCurrentCell();
+		if (editing && editing._getSelf() === this) {
+			//console.log("style height inside: ", this.element);
+			//h = 150;
+			if (this.heightSpecial) h = Math.max(h, this.heightSpecial);
+		}
+	}
 	// J:-> Ugly hack. Couldn't figure out why offsetHeight is so low (8px)
 	// sometimes. 
-	if (this.height) return this.height;
-	var h = Math.max(this.element.offsetHeight, 25);
+	h = Math.max(h, 25);
 	return h;
 	//return this.height || this.element.offsetHeight;
 };
