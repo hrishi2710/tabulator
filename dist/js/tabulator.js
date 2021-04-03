@@ -5495,7 +5495,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 				// J: +1 to correct for rounding errors. This fixes the gratuitous scroll issue.
 
-				this.element.style.height = this.table.element.clientHeight - otherHeight + 1 + "px";
+				// J: +100 to solve the last row editing problems.
+
+				this.element.style.height = this.table.element.clientHeight - otherHeight + 100 + "px";
 
 				this.element.scrollTop = this.scrollTop;
 			}
