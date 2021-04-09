@@ -14921,6 +14921,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 			editor: false,
 			blocked: false,
 			check: column.definition.editable,
+			// J: A new call back to force application to trigger edits if they wish. 
+			cellForceEditTrigger: column.definition.cellForceEditTrigger,
 			params: column.definition.editorParams || {}
 		};
 
@@ -15045,6 +15047,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 		element.addEventListener("focus", function (e) {
 			if (!self.recursionBlock) {
+				console.log("Focus invocation of self.edit");
 				self.edit(cell, e, false);
 			}
 		});
@@ -15060,6 +15063,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 	Edit.prototype.editCell = function (cell, forceEdit) {
 		this.focusCellNoEvent(cell);
+		console.log("editCell invocation of edit");
 		this.edit(cell, false, forceEdit);
 	};
 
@@ -15107,9 +15111,23 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 		    component,
 		    params;
 
+		if (e === false) {
+			// J: When e is false, edit was triggered forcefully. This is the only mode
+			// we will need in this fork. 
+		} else {
+			// J: Just call the trigger function for editing. The application will 
+			// figure out if it wants to do the editing and trigger it forcefully. 
+			if (typeof cell.column.modules.edit.cellForceEditTrigger === "function") {
+				cell.column.modules.edit.cellForceEditTrigger(cell.getComponent());
+			}
+			// J: returning here ensures that none of events get trapped or 
+			// 'stopPropagation' called on them. Otherwise, we were losing copy-paste! 
+			return;
+		}
 		//prevent editing if another cell is refusing to leave focus (eg. validation fail)
 		if (this.currentCell) {
 			if (!this.invalidEdit) {
+				console.log("Cancel edit from #1");
 				this.cancelEdit();
 			}
 			return;
@@ -15160,13 +15178,14 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 					return false;
 				}
 			} else {
-				// console.warn("Edit Success Error - cannot call success on a cell that is no longer being edited");
+				console.warn("Edit Success Error - cannot call success on a cell that is no longer being edited");
 			}
 		}
 
 		//handle aborted edit
 		function cancel() {
 			if (self.currentCell === cell) {
+				console.log("Cancel edit from #2");
 				self.cancelEdit();
 
 				if (self.table.options.dataTree && self.table.modExists("dataTree")) {
@@ -15198,6 +15217,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 			if (allowEdit || forceEdit) {
 
+				console.log("Cancel edit from #3");
 				self.cancelEdit();
 
 				self.currentCell = cell;
