@@ -53,3 +53,5 @@ Cell.prototype.getHeight = function(){
 	};
 
 	```
+1. Made changes to have some space at the bottom of the table. 
+1. Now, editing is always done by 'force' from the application. This is to ensure we don't lose clipboard functionality when editors are enabled. 
