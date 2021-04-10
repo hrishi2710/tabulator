@@ -10758,6 +10758,8 @@ var Clipboard = function Clipboard(table) {
 	this.customSelection = false;
 	this.rowRange = false;
 	this.blocked = true; //block copy actions not originating from this command
+	// J: Need this flag because it has to work through 'copy' event. 
+	this.isFullTableCopy = false;
 };
 
 Clipboard.prototype.initialize = function () {
@@ -10767,6 +10769,60 @@ Clipboard.prototype.initialize = function () {
 
 	this.rowRange = this.table.options.clipboardCopyRowRange;
 
+	// J: Add a special event handler for 'copy' that works only when you
+	// want fullTableCopy. Otherwise, let the browser do its thing. 
+	if (this.mode === "fullTableCopyOnly") {
+		this.table.element.addEventListener("copy", function (e) {
+			// if not ifFullTableCopy, we don't preventDefault. This is the key trick. 
+			console.log("J: Inside fullTableCopyOnly handler:", _this46.isFullTableCopy);
+			if (_this46.isFullTableCopy) {
+				var plain, html, list;
+
+				if (!_this46.blocked) {
+					e.preventDefault();
+
+					if (_this46.customSelection) {
+						plain = _this46.customSelection;
+
+						if (_this46.table.options.clipboardCopyFormatter) {
+							plain = _this46.table.options.clipboardCopyFormatter("plain", plain);
+						}
+					} else {
+
+						var list = _this46.table.modules.export.generateExportList(_this46.rowRange, _this46.table.options.clipboardCopyStyled, _this46.table.options.clipboardCopyConfig, "clipboard");
+
+						html = _this46.table.modules.export.genereateHTMLTable(list);
+						plain = html ? _this46.generatePlainContent(list) : "";
+
+						if (_this46.table.options.clipboardCopyFormatter) {
+							plain = _this46.table.options.clipboardCopyFormatter("plain", plain);
+							html = _this46.table.options.clipboardCopyFormatter("html", html);
+						}
+					}
+
+					if (window.clipboardData && window.clipboardData.setData) {
+						window.clipboardData.setData('Text', plain);
+					} else if (e.clipboardData && e.clipboardData.setData) {
+						e.clipboardData.setData('text/plain', plain);
+						if (html) {
+							e.clipboardData.setData('text/html', html);
+						}
+					} else if (e.originalEvent && e.originalEvent.clipboardData.setData) {
+						e.originalEvent.clipboardData.setData('text/plain', plain);
+						if (html) {
+							e.originalEvent.clipboardData.setData('text/html', html);
+						}
+					}
+
+					_this46.table.options.clipboardCopied.call(_this46.table, plain, html);
+
+					_this46.reset();
+				}
+			} else {
+				console.log("J:-> Not doing anything else");
+			}
+		});
+	}
 	if (this.mode === true || this.mode === "copy") {
 		this.table.element.addEventListener("copy", function (e) {
 			var plain, html, list;
@@ -10871,10 +10927,63 @@ Clipboard.prototype.generatePlainContent = function (list) {
 	return output.join("\n");
 };
 
+// J:-> Special copy. 
+Clipboard.prototype.fullTableCopyOnly = function (range, internal) {
+	var range, sel, textRange;
+	this.blocked = false;
+	this.customSelection = false;
+
+	if (this.mode === "fullTableCopyOnly") {
+
+		this.rowRange = range || this.table.options.clipboardCopyRowRange;
+
+		// J: When internal is undefined, we don't want to mess with selections. 
+		if (internal === undefined) {
+			if (typeof window.getSelection != "undefined" && typeof document.createRange != "undefined") {
+				range = document.createRange();
+				range.selectNodeContents(this.table.element);
+				sel = window.getSelection();
+
+				if (sel.toString() && internal) {
+					this.customSelection = sel.toString();
+				}
+
+				sel.removeAllRanges();
+				sel.addRange(range);
+			} else if (typeof document.selection != "undefined" && typeof document.body.createTextRange != "undefined") {
+				textRange = document.body.createTextRange();
+				textRange.moveToElementText(this.table.element);
+				textRange.select();
+			}
+		}
+		// Dopy our special copy. Basically the 'copy' event handler above.
+		// For full table copy, internal is undefined. 
+		if (internal === undefined) this.isFullTableCopy = true;
+		document.execCommand('copy');
+		this.isFullTableCopy = false;
+		if (internal === undefined) {
+			// If full table copy, remove the ranges now.
+			if (sel) {
+				sel.removeAllRanges();
+			}
+		}
+		// else, don't remove ranges and let browser default take care of it. 
+		/*
+  if (sel) {
+  	sel.removeAllRanges();
+  } */
+	}
+};
+
 Clipboard.prototype.copy = function (range, internal) {
 	var range, sel, textRange;
 	this.blocked = false;
 	this.customSelection = false;
+
+	// J: Added 'fullTableCopyOnly' option. No event listener in this mode, but supports
+	// full table copy. 
+	console.log("J:-> this.mode is:", this.mode);
+	if (this.mode === "fullTableCopyOnly") return this.fullTableCopyOnly(range, internal);
 
 	if (this.mode === true || this.mode === "copy") {
 
