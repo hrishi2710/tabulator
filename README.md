@@ -55,3 +55,6 @@ Cell.prototype.getHeight = function(){
 	```
 1. Made changes to have some space at the bottom of the table. 
 1. Now, editing is always done by 'force' from the application. This is to ensure we don't lose clipboard functionality when editors are enabled. 
+
+
+* [20/8/2023] - Added support for submenu items within a menu in tabulator version 4.8.1 . The submenu items were supported by 4.9 version in the original repo. Also, there is a slight improvement of closing and opening the submenu by just hovering the mouse instead of clicking which is the case in the original repo.
