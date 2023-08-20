@@ -172,12 +172,16 @@ Menu.prototype.loadMenu = function (e, component, menu, parentEl) {
 				});
 			} else {
 				if (item.menu && item.menu.length) {
-					itemEl.addEventListener("click", (e) => {
+					itemEl.addEventListener("mouseenter", (e) => {
 						e.stopPropagation();
 						this.hideOldSubMenus(menuEl);
 						this.loadMenu(e, component, item.menu, itemEl);
 					});
 				} else {
+					itemEl.addEventListener("mouseenter", (e) => {
+						e.stopPropagation();
+						this.hideOldSubMenus(menuEl);
+					});
 					if (item.action) {
 						itemEl.addEventListener("click", (e) => {
 							item.action(e, component.getComponent());
